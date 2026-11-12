@@ -165,10 +165,10 @@ enable_m1 = PWM(Pin(10), freq=frequency)
 enable_m2 = PWM(Pin(13), freq=frequency)
 
 # Initialise right hand side motor
-r_motor = motor(pin1, pin2, enable_m1, encoder_right_pin_a)
+r_motor = motor(pin1, pin2, enable_m1, encoder_right_pin)
 
 # Initialise left hand side motor
-l_motor = motor(pin3, pin4, enable_m2, encoder_left_pin_a)
+l_motor = motor(pin3, pin4, enable_m2, encoder_left_pin)
 
 robot = micromouse(l_motor, r_motor)
     
