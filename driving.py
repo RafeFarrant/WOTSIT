@@ -91,8 +91,8 @@ class micromouse:
         
         while self.l_motor.encoder_count < ticks_per_rev and self.r_motor.encoder_count < ticks_per_rev:
             pass
-            self.l_motor.stop()
-            self.r_motor.stop()
+        self.l_motor.stop()
+        self.r_motor.stop()
 
                 
     # Initialise a function to turn right 90 degrees      
@@ -109,8 +109,8 @@ class micromouse:
         while self.l_motor.encoder_count < ticks_per_rev and self.r_motor.encoder_count < ticks_per_rev:
             pass
             # Stop both both motors
-            self.l_motor.stop()
-            self.r_motor.stop()
+        self.l_motor.stop()
+        self.r_motor.stop()
 
     # Initialise a function to turn right 90 degrees      
     def forward_16(self, speed: float) -> None:
@@ -126,8 +126,8 @@ class micromouse:
         
         while abs(self.l_motor.encoder_count) < target_ticks and abs(self.r_motor.encoder_count) < target_ticks:
             pass
-            self.l_motor.stop()
-            self.r_motor.stop()
+        self.l_motor.stop()
+        self.r_motor.stop()
 
     # Initialise a function for a left correction 
     def l_correction(self, speed: float) -> None:
@@ -165,10 +165,10 @@ enable_m1 = PWM(Pin(10), freq=frequency)
 enable_m2 = PWM(Pin(13), freq=frequency)
 
 # Initialise right hand side motor
-r_motor = motor(pin1, pin2, enable_m1, encoder_right_pin)
+r_motor = motor(pin1, pin2, enable_m1, encoder_right_pin_a)
 
 # Initialise left hand side motor
-l_motor = motor(pin3, pin4, enable_m2, encoder_left_pin)
+l_motor = motor(pin3, pin4, enable_m2, encoder_left_pin_a)
 
 robot = micromouse(l_motor, r_motor)
     
