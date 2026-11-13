@@ -10,10 +10,11 @@ mm_per_tick = (3.14159*wheel_diameter)/ticks_per_rev
 class motor:
     
     # Initialise the paremters and enable the minimum and maximum duty cycles
-    def __init__(self, pinA, pinB, enable_pin, encoder_pin, min_duty=0, max_duty=65535):
+    def __init__(self, pinA, pinB, enable_pin, encoder_pin_a, encoder_pin_b, min_duty=0, max_duty=65535):
         self.pinA = pinA
         self.pinB= pinB
-        self.enable_pin = enable_pin
+        self.enable_pin_a = enable_pin_a
+        self.enable_pin_b = enable_pin_b
         self.min_duty = min_duty
         self.max_duty = max_duty
         
@@ -91,8 +92,8 @@ class micromouse:
         
         while self.l_motor.encoder_count < ticks_per_rev and self.r_motor.encoder_count < ticks_per_rev:
             pass
-        self.l_motor.stop()
-        self.r_motor.stop()
+            self.l_motor.stop()
+            self.r_motor.stop()
 
                 
     # Initialise a function to turn right 90 degrees      
@@ -109,8 +110,8 @@ class micromouse:
         while self.l_motor.encoder_count < ticks_per_rev and self.r_motor.encoder_count < ticks_per_rev:
             pass
             # Stop both both motors
-        self.l_motor.stop()
-        self.r_motor.stop()
+            self.l_motor.stop()
+            self.r_motor.stop()
 
     # Initialise a function to turn right 90 degrees      
     def forward_16(self, speed: float) -> None:
@@ -126,8 +127,8 @@ class micromouse:
         
         while abs(self.l_motor.encoder_count) < target_ticks and abs(self.r_motor.encoder_count) < target_ticks:
             pass
-        self.l_motor.stop()
-        self.r_motor.stop()
+            self.l_motor.stop()
+            self.r_motor.stop()
 
     # Initialise a function for a left correction 
     def l_correction(self, speed: float) -> None:
@@ -165,10 +166,11 @@ enable_m1 = PWM(Pin(10), freq=frequency)
 enable_m2 = PWM(Pin(13), freq=frequency)
 
 # Initialise right hand side motor
-r_motor = motor(pin1, pin2, enable_m1, encoder_right_pin)
+r_motor = motor(pin1, pin2, enable_m1, encoder_right_pin_a, encoder_right_pin_b)
 
 # Initialise left hand side motor
-l_motor = motor(pin3, pin4, enable_m2, encoder_left_pin)
+l_motor = motor(pin3, pin4, enable_m2, encoder_left_pin_a, encoder_left_pin_b)
 
 robot = micromouse(l_motor, r_motor)
     
+
