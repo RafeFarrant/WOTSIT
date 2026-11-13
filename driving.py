@@ -149,7 +149,7 @@ class micromouse:
         self.l_motor.forward(0.9*speed)
 
     # Initialise a function to stop the mouse    
-    def stop_both(self, speed: float) -> None:
+    def stop_both(self) -> None:
         self.l_motor.stop()
         self.r_motor.stop()
         
