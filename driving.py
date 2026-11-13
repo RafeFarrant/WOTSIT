@@ -13,21 +13,25 @@ class motor:
     def __init__(self, pinA, pinB, enable_pin, encoder_pin_a, encoder_pin_b, min_duty=0, max_duty=65535):
         self.pinA = pinA
         self.pinB= pinB
-        self.enable_pin_a = enable_pin_a
-        self.enable_pin_b = enable_pin_b
+        self.enable_pin = enable_pin
+        self.encoder_pin_a = encoder_pin_a
+        self.encoder_pin_b = encoder_pin_b
         self.min_duty = min_duty
         self.max_duty = max_duty
         
         # Initialise encoder pin and set count to zero
         self.encoder_count = 0
-        self.encoder_pin = encoder_pin
+        self.encoder_pin_a = encoder_pin_b
+        self.encoder_pin_b = encoder_pin_b
         
         # Set up the encoder as an input with a pull-up resistor
-        self.encoder_pin.init(Pin.IN, Pin.PULL_UP)
+        self.encoder_pin_a.init(Pin.IN, Pin.PULL_UP)
+        self.encoder_pin_b.init(Pin.IN, Pin.PULL_UP)
         
         # Attach the interrupt 
-        self.encoder_pin.irq(trigger=Pin.IRQ_RISING, handler=self.count_pulse)
-        
+        self.encoder_pin_a.irq(trigger=Pin.IRQ_RISING, handler=self.count_pulse)
+        self.encoder_pin_b.irq(trigger=Pin.IRQ_RISING, handler=self.count_pulse)
+    
     # Add one to encoder count on each pulse  
     def count_pulse(self, pin):
         self.encoder_count += 1
