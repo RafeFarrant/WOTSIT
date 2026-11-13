@@ -147,6 +147,11 @@ class micromouse:
         # Keep right motor at full speed and run the left motor at 90% speed
         self.r_motor.forward(1.0*speed)
         self.l_motor.forward(0.9*speed)
+
+    # Initialise a function to stop the mouse    
+    def stop_both(self, speed: float) -> None:
+        self.l_motor.stop()
+        self.r_motor.stop()
         
 
 # Initialise frequency 
