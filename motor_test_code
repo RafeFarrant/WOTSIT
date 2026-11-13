@@ -1,0 +1,27 @@
+from machine import Pin
+from time import sleep
+
+# Drive Motor 1 at full power
+en1 = Pin(10, Pin.OUT)
+in1 = Pin(11, Pin.OUT)
+in2 = Pin(12, Pin.OUT)
+
+# Drive Motor 2 at full power
+en2 = Pin(13, Pin.OUT)
+in3 = Pin(14, Pin.OUT)
+in4 = Pin(15, Pin.OUT)
+
+print("Starting motors")
+en1.value(1)
+in1.value(1)
+in2.value(0)
+
+en2.value(1)
+in3.value(1)
+in4.value(0)
+
+sleep(3)
+
+en1.value(0)
+en2.value(0)
+print("Done")
