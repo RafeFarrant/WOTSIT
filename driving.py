@@ -1,75 +1,43 @@
-#MOTOR DRIVER
-#Motor driver => Raspberry Pi
-#PWMA => pin GP10
-#AI1 => pin GP11      
-#AI2 => pin GP12
-#PWMB => pin GP13
-#BI1 => pin GP14      
-#BI2 => pin GP15
-#VM => battery +
-#VCC => 3.3V
-#GND => GND & battery -
-#STBY => 3.3V
-#Motor driver => Encoder
-#Encoder pins are flipped
-#AO1 => GND      
-#AO2 => B
-#BO1 => GND      
-#BO2 => B
-
-#ENCODER (Pins are flipped)
-#M1 => GND
-#M2 (Encoder left A) => pin GP26
-#VCC (Encoder left B) => pin GP27
-#M2 (Encoder right A) => pin GP20
-#VCC (Encoder right B) => pin GP21 
-#A => 3.3V
-#B => A02 / B02
-#GND => A01 / B01
-
 # Import functions Pin, PWM and Sleep
 from machine import Pin, PWM
-from time import sleep, ticks_ms, ticks_diff
+from time import sleep
 
-# Initialise conditions  
-FREQUENCY = 10000
-TICKS_PER_REV = 283
-WHEEL_DIAMETER_MM = 40
-WHEEL_BASE_MM = 75
-TURN_SCALE = 1.0 #Do testing on this
-MM_PER_TICK = (3.14159*WHEEL_DIAMETER_MM)/TICKS_PER_REV
-TURN_TICKS = ((3.14159*WHEEL_BASE_MM)/4)/MM_PER_TICK * TURN_SCALE
+ticks_per_rev = 283
+wheel_diameter = 40
+mm_per_tick = (3.14159*wheel_diameter)/ticks_per_rev
 
 # Define class motor
-class Motor:
+class motor:
     
     # Initialise the paremters and enable the minimum and maximum duty cycles
-    def __init__(self, pinA, pinB, enable_pin, enc_a, enc_b, freq=FREQUENCY, min_duty=0, max_duty=65535):
-        self.pinA = Pin(pinA, Pin.OUT)
-        self.pinB= Pin(pinB, Pin.OUT)
-        self.enable_pin = PWM(Pin(enable_pin), freq=freq)
+    def __init__(self, pinA, pinB, enable_pin, encoder_pin_a, encoder_pin_b, min_duty=0, max_duty=65535):
+        self.pinA = pinA
+        self.pinB= pinB
+        self.enable_pin = enable_pin
         self.min_duty = min_duty
         self.max_duty = max_duty
         self.speed=0
-        
         # Initialise encoder pin and set count to zero
-        self.enc_count = 0        
-        # Set up the encoder as an input with a pull-up resistor
-        self.enc_a = Pin(enc_a, Pin.IN, Pin.PULL_UP)
-        self.enc_b = Pin(enc_b, Pin.IN, Pin.PULL_UP)
-
-        # Attach interrupt 
-        self.enc_a.irq(trigger=Pin.IRQ_RISING, handler=self.count_pulse)
+        self.encoder_count = 0
+        self.encoder_pin_a = encoder_pin_b
+        self.encoder_pin_b = encoder_pin_b
         
+        # Set up the encoder as an input with a pull-up resistor
+        self.encoder_pin_a.init(Pin.IN, Pin.PULL_UP)
+        self.encoder_pin_b.init(Pin.IN, Pin.PULL_UP)
+        
+        # Attach the interrupt 
+        self.encoder_pin_a.irq(trigger=Pin.IRQ_RISING, handler=self.count_pulse)
+    
     # Add one to encoder count on each pulse  
     def count_pulse(self, pin):
-        self.enc_count += 1
+        self.encoder_count += 1
 
     # Reset encoder count to zero
-    def reset_encoder(self):
-        self.enc_count = 0
+    def reset_encoder(self) -> None:
+        self.encoder_count = 0
 
-    def duty_cycle(self, speed) -> int: 
+    def duty_cycle(self, speed: float) -> int: 
         # Ensures that the speed is never more than 100% or less than 0%
         speed = max(0, min(100, speed))
         # Scale percentage to an integer 16-bit PWM duty cycle value 
@@ -77,28 +45,28 @@ class Motor:
     
     
     # Define a function that turns the motor forwards
-    def forward(self, speed):
+    def forward(self, speed: float) -> None:
         self.speed = speed
         self.enable_pin.duty_u16(self.duty_cycle(self.speed))
         self.pinA.value(1)
         self.pinB.value(0)
      
     # Define a function that turns the motor backwards     
-    def backward(self, speed):
+    def backward(self, speed: float) -> None:
         self.speed = speed
         self.enable_pin.duty_u16(self.duty_cycle(self.speed))
         self.pinA.value(0)
         self.pinB.value(1)
         
-    # Define a function that stops the motor
-    def stop(self):
+        # Define a function that stops the motor
+    def stop(self) -> None:
         self.speed = 0
         self.enable_pin.duty_u16(0)
         self.pinA.value(0)
         self.pinB.value(0)
 
 # Initialise micromouse class
-class Micromouse:
+class micromouse:
 
     # Initialise the paremters and enable the minimum and maximum duty cycles
     def __init__(self, l_motor, r_motor):
@@ -106,86 +74,114 @@ class Micromouse:
         self.r_motor = r_motor
         
     # Initialise a function to go straight forward      
-    def straight(self, speed):
+    def straight(self, speed: float) -> None:
+        
         # Turn the right & left motor forwards
         self.l_motor.forward(speed)
         self.r_motor.forward(speed)
+    
+    # Initialise a function to turn right 90 degrees      
+    def left(self, speed: float) -> None:
         
-    # Initialise a function to go reset both encoders      
-    def reset_encs(self):
+        #STOP CORRECTING POSITION
         self.l_motor.reset_encoder()
         self.r_motor.reset_encoder()
-    
-    # Initialise a function to stop both motors      
-    def stop_both(self):
+        
+        # Turn the right motor forwards and the left motor backwards
+        self.l_motor.backward(speed)
+        self.r_motor.forward(speed)
+        
+        while self.l_motor.encoder_count < ticks_per_rev and self.r_motor.encoder_count < ticks_per_rev:
+            pass
+            self.l_motor.stop()
+            self.r_motor.stop()
+
+                
+    # Initialise a function to turn right 90 degrees      
+    def right(self, speed: float) -> None:
+        
+        #STOP CORRECTING POSITION
+        self.l_motor.reset_encoder()
+        self.r_motor.reset_encoder()
+        
+        # Turn the left motor forwards and the right motor backwards
+        self.l_motor.forward(speed)
+        self.r_motor.backward(speed)
+        
+        while self.l_motor.encoder_count < ticks_per_rev and self.r_motor.encoder_count < ticks_per_rev:
+            pass
+            # Stop both both motors
+            self.l_motor.stop()
+            self.r_motor.stop()
+
+    # Initialise a function to turn right 90 degrees      
+    def forward_16(self, speed: float) -> None:
+        
+        #STOP CORRECTING POSITION
+        self.l_motor.reset_encoder()
+        self.r_motor.reset_encoder()
+        
+        target_ticks = 16 / mm_per_tick
+        
+        # Turn the right motor forwards and the left motor backwards
+        self.straight(speed)
+        
+        while abs(self.l_motor.encoder_count) < target_ticks and abs(self.r_motor.encoder_count) < target_ticks:
+            pass
+            self.l_motor.stop()
+            self.r_motor.stop()
+
+    # Initialise a function for a left correction 
+    def l_correction(self, speed: float) -> None:
+        
+        # Keep left motor at full speed and run the right motor at 90% speed
+        self.l_motor.forward(1.0*speed)
+        self.r_motor.forward(0.9*speed)
+        
+    # Initialise a function for a right correction    
+    def r_correction(self, speed: float) -> None:
+         
+        # Keep right motor at full speed and run the left motor at 90% speed
+        self.r_motor.forward(1.0*speed)
+        self.l_motor.forward(0.9*speed)
+
+    # Initialise a function to stop the mouse    
+    def stop_both(self) -> None:
         self.l_motor.stop()
         self.r_motor.stop()
         
-    def turn(self, speed, direction, target_ticks, timeout_ms=3000):
-        
-        self.reset_encs()
-        
-        if direction == RIGHT: # Turns the mouse right
-            self.l_motor.forward(speed)
-            self.r_motor.backward(speed)
-        else: # Turns the mouse left
-            self.l_motor.backward(speed)
-            self.r_motor.forward(speed)
-            
-        l_done = False
-        r_done = False
-        start = ticks_ms()
-        
-        while not (l_done and r_done):
-            if not l_done and self.l_motor.enc_count >= target_ticks:
-                self.l_motor.stop()
-                l_done = True
-            if not r_done and self.r_motor.enc_count >= target_ticks:
-                self.r_motor.stop()
-                r_done = True
-            if ticks_diff(ticks_ms(), start) > timeout_ms:  
-                break    
-                
-        self.stop_both()      
-               
-    # Initialise a function to turn left 90 degrees      
-    def left(self, speed, target_ticks=TURN_TICKS):        
-        self.turn(speed, LEFT, target_ticks)
-            
-    # Initialise a function to turn right 90 degrees      
-    def right(self, speed, target_ticks=TURN_TICKS):
-        self.turn(speed, RIGHT, target_ticks)
 
-    # Initialise a function to drive forward 160mm      
-    def forward_16(self, speed, c=0.2, timeout_ms=5000):
-        
-        self.reset_encs()
-        start = ticks_ms()    
-        target_ticks = 160 / MM_PER_TICK
-            
-        while True:
-            l = self.l_motor.enc_count
-            r = self.r_motor.enc_count
-        
-            correction = c * (l - r)
-            
-            if (l + r) / 2 >= target_ticks:
-                break
-            if ticks_diff(ticks_ms(), start) > timeout_ms:
-                break
-            
-            self.l_motor.forward(speed - correction)
-            self.r_motor.forward(speed + correction)
-            
-        self.stop_both()
+# Initialise frequency 
+frequency = 1000
 
-# Initialise motors written in format motor(IN1, IN2, PWM, ENC_A, ENC_B) 
-l_motor = Motor(11, 12, 10, 26, 27)
-r_motor = Motor(14, 15, 13, 20, 21)
+# Initialise pin outputs
+pin1 = Pin(11, Pin.OUT)
+pin2 = Pin(12, Pin.OUT)
+pin3 = Pin(14, Pin.OUT)
+pin4 = Pin(15, Pin.OUT)
 
-robot = Micromouse(l_motor, r_motor)
+# Encoder GPIO pins (make sure to update these to match your actual wiring!)
+encoder_left_pin_a = Pin(26, Pin.IN)
+encoder_left_pin_b = Pin(27, Pin.IN)
+encoder_right_pin_a = Pin(20, Pin.IN)
+encoder_right_pin_b = Pin(21, Pin.IN)
 
-robot.right(50)
+
+# Initialise PWMs
+enable_m1 = PWM(Pin(10), freq=frequency)
+enable_m2 = PWM(Pin(13), freq=frequency)
+
+# Initialise right hand side motor
+r_motor = motor(pin1, pin2, enable_m1, encoder_right_pin_a, encoder_right_pin_b)
+
+# Initialise left hand side motor
+l_motor = motor(pin3, pin4, enable_m2, encoder_left_pin_a, encoder_left_pin_b)
+
+robot = micromouse(l_motor, r_motor)
+
+robot.straight(500)
 sleep(2)
-robot.stop_both()
-print("Stopped")
+l_motor.stop()
+r_motor.stop()
+
+    
